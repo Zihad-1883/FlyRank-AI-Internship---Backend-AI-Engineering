@@ -91,8 +91,69 @@ const createTask = async (payload) => {
   };
 };
 
+const updateTask = async (id, payload) => {
+  if (
+    !payload.title ||
+    typeof payload.title !== "string" ||
+    payload.title.trim() === ""
+  ) {
+    return {
+      statusCode: 400,
+      error: "Invalid title",
+    };
+  }
+
+  if (payload.done === undefined || typeof payload.done !== "boolean") {
+    return {
+      statusCode: 400,
+      error: "Invalid done value",
+    };
+  }
+
+  const isFound = seedTasks.find((task) => task.id === parseInt(id));
+
+  if (!isFound) {
+    return {
+      statusCode: 404,
+      error: "Task not found",
+    };
+  }
+
+  const findIndex = seedTasks.findIndex((task) => task.id === parseInt(id));
+  seedTasks[findIndex] = {
+    id: parseInt(id),
+    title: payload.title,
+    done: payload.done,
+  };
+
+  return {
+    statusCode: 200,
+    data: seedTasks[findIndex],
+  };
+};
+
+const deleteTask = async (id) => {
+  const isFound = seedTasks.find((task) => task.id === parseInt(id));
+  if (!isFound) {
+    return {
+      statusCode: 404,
+      error: "Task not found",
+    };
+  }
+
+  const findIndex = seedTasks.findIndex((task) => task.id === parseInt(id));
+  const task = seedTasks[findIndex];
+  seedTasks.splice(findIndex, 1);
+  return {
+    statusCode: 204,
+    message: "Task deleted successfully",
+  };
+};
+
 module.exports = {
   getAllTasks,
   getSingleTask,
   createTask,
+  updateTask,
+  deleteTask,
 };

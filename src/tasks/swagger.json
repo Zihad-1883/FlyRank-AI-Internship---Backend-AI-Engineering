@@ -15,14 +15,11 @@
       "get": {
         "summary": "Get all tasks",
         "responses": {
-          "200": {
-            "description": "A successful list arrays response."
-          }
+          "200": { "description": "Success" }
         }
       },
       "post": {
         "summary": "Create a new task",
-        "description": "Adds a brand new task item to your list.",
         "requestBody": {
           "required": true,
           "content": {
@@ -31,10 +28,47 @@
                 "type": "object",
                 "required": ["title"],
                 "properties": {
+                  "title": { "type": "string", "example": "Buy milk" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created" }
+        }
+      }
+    },
+    "/tasks/{id}": {
+      "put": {
+        "summary": "Update an existing task",
+        "description": "Updates the title or completion status state of a specific task via its ID parameter.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The numeric ID of the task to update",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
                   "title": {
                     "type": "string",
-                    "description": "The description or name of the task",
-                    "example": "Buy milk"
+                    "example": "Finish the project updated"
+                  },
+                  "done": {
+                    "type": "boolean",
+                    "example": true
                   }
                 }
               }
@@ -42,23 +76,38 @@
           }
         },
         "responses": {
-          "201": {
-            "description": "Task created successfully.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": { "type": "integer", "example": 2 },
-                    "title": { "type": "string", "example": "Buy milk" },
-                    "done": { "type": "boolean", "example": false }
-                  }
-                }
-              }
-            }
+          "200": {
+            "description": "Task updated successfully."
           },
           "400": {
-            "description": "Bad Request - Title is missing."
+            "description": "Invalid input formatting provided."
+          },
+          "404": {
+            "description": "Task not found."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a task",
+        "description": "Removes a specific task record permanently from the application index directory by its ID parameter.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The numeric ID of the task to remove",
+            "schema": {
+              "type": "integer",
+              "example": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task deleted successfully."
+          },
+          "404": {
+            "description": "Task not found."
           }
         }
       }

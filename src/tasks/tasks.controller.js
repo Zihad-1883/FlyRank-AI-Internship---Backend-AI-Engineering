@@ -17,8 +17,23 @@ const createTask = async (req, res) => {
   res.json(newTask);
 };
 
+const updateTask = async (req, res) => {
+  const id = req.params.id;
+  const payload = req.body;
+  const updatedTask = await service.updateTask(id, payload);
+  res.json(updatedTask);
+};
+
+const deleteTask = async (req, res) => {
+    const id = req.params.id;
+    const deletedTask = await service.deleteTask(id);
+    res.json(deletedTask);
+}
+
 module.exports = {
   getAllTasks,
   getSingleTask,
   createTask,
+  updateTask,
+  deleteTask
 };
