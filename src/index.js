@@ -2,6 +2,8 @@ const express = require("express");
 const app = express();
 const port = 3000;
 
+const tasksRoute = require("./tasks/tasks.route.js");
+
 app.get("/", (req, res) => {
   res.json({
     name: "Task API",
@@ -15,6 +17,8 @@ app.get("/health", (req, res) => {
     status: "ok",
   });
 });
+
+app.use("/tasks", tasksRoute);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
