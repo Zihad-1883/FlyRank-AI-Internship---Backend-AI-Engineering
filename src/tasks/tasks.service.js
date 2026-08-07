@@ -20,13 +20,71 @@ const allId = [];
 seedTasks.forEach((task) => allId.push(task.id));
 const maxId = Math.max(...allId);
 
-const getAllTasks = async () => {
+const getAllTasks = async (query) => {
   if (seedTasks.length === 0) {
     return {
       statusCode: 404,
       error: "No tasks found",
     };
   }
+
+  if (query.done !== undefined && query.search !== undefined) {
+    if (query.done === "true") {
+      const filteredTasks = seedTasks.filter(
+        (task) =>
+          task.done === true &&
+          task.title
+            .toLowerCase()
+            .split(" ")
+            .includes(query.search.toLowerCase()),
+      );
+      return {
+        statusCode: 200,
+        data: filteredTasks,
+      };
+    } else if (query.done === "false") {
+      const filteredTasks = seedTasks.filter(
+        (task) =>
+          task.done === false &&
+          task.title
+            .toLowerCase()
+            .split(" ")
+            .includes(query.search.toLowerCase()),
+      );
+    
+      return {
+        statusCode: 200,
+        data: filteredTasks,
+      };
+    }
+  }
+
+  if (query.done !== undefined) {
+    if (query.done === "true") {
+      const filteredTasks = seedTasks.filter((task) => task.done === true);
+      return {
+        statusCode: 200,
+        data: filteredTasks,
+      };
+    } else {
+      const filteredTasks = seedTasks.filter((task) => task.done === false);
+      return {
+        statusCode: 200,
+        data: filteredTasks,
+      };
+    }
+  }
+
+  if (query.search !== undefined) {
+    const filteredTasks = seedTasks.filter((task) =>
+      task.title.toLowerCase().split(" ").includes(query.search.toLowerCase()),
+    );
+    return {
+      statusCode: 200,
+      data: filteredTasks,
+    };
+  }
+
   return {
     statusCode: 200,
     data: seedTasks,

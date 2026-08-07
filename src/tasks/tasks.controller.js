@@ -1,7 +1,8 @@
 const service = require("./tasks.service");
 
 const getAllTasks = async (req, res) => {
-  const tasks = await service.getAllTasks();
+  const query = req.query;
+  const tasks = await service.getAllTasks(query);
   res.json(tasks);
 };
 
@@ -25,15 +26,15 @@ const updateTask = async (req, res) => {
 };
 
 const deleteTask = async (req, res) => {
-    const id = req.params.id;
-    const deletedTask = await service.deleteTask(id);
-    res.json(deletedTask);
-}
+  const id = req.params.id;
+  const deletedTask = await service.deleteTask(id);
+  res.json(deletedTask);
+};
 
 module.exports = {
   getAllTasks,
   getSingleTask,
   createTask,
   updateTask,
-  deleteTask
+  deleteTask,
 };
