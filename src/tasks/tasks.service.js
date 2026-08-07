@@ -16,6 +16,10 @@ const seedTasks = [
   },
 ];
 
+const allId = [];
+seedTasks.forEach((task) => allId.push(task.id));
+const maxId = Math.max(...allId);
+
 const getAllTasks = async () => {
   if (seedTasks.length === 0) {
     return {
@@ -44,7 +48,51 @@ const getSingleTask = async (id) => {
   }
 };
 
+const createTask = async (payload) => {
+  if (
+    !payload.title ||
+    typeof payload.title !== "string" ||
+    payload.title.trim() === ""
+  ) {
+    return {
+      statusCode: 400,
+      error: "Invalid title",
+    };
+  }
+
+  const duplicateTask = seedTasks.some(
+    (task) => task.title.toLowerCase() === payload.title.toLowerCase(),
+  );
+
+  if (duplicateTask) {
+    return {
+      statusCode: 400,
+      error: "Task already exists",
+    };
+  }
+
+  if (Object.keys(payload).length > 1) {
+    return {
+      statusCode: 400,
+      error: "Only tile is allowed in the payload",
+    };
+  }
+
+  const newTask = {
+    id: maxId + 1,
+    title: payload.title,
+    done: false,
+  };
+
+  seedTasks.push(newTask);
+  return {
+    statusCode: 201,
+    data: newTask,
+  };
+};
+
 module.exports = {
   getAllTasks,
   getSingleTask,
+  createTask,
 };

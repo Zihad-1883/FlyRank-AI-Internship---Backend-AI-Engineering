@@ -11,7 +11,14 @@ const getSingleTask = async (req, res) => {
   res.json(task);
 };
 
+const createTask = async (req, res) => {
+  const payload = req.body;
+  const newTask = await service.createTask(payload);
+  res.json(newTask);
+};
+
 module.exports = {
   getAllTasks,
   getSingleTask,
+  createTask,
 };
