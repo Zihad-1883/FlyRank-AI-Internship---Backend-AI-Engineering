@@ -1,0 +1,303 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Task Manager CRUD API",
+    "description": "A simple in-memory Task Manager API built with Express.js.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/tasks": {
+      "get": {
+        "summary": "Get all tasks",
+        "description": "Retrieves all tasks with optional search (by name) and done status filtering.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Search keyword to filter tasks by name (case-insensitive)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "done",
+            "in": "query",
+            "required": false,
+            "description": "Filter tasks by completion status (true or false)",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of tasks retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Tasks retrieved successfully",
+                  "data": [
+                    { "id": 1, "name": "Learn Express.js", "done": true },
+                    { "id": 2, "name": "Build Task Manager API", "done": false }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query parameters",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Invalid value for 'done' query parameter. Must be 'true' or 'false'.",
+                  "errors": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new task",
+        "description": "Adds a new task to the task list.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Complete swagger documentation"
+                  },
+                  "done": {
+                    "type": "boolean",
+                    "example": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Task created successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Task created successfully",
+                  "data": { "id": 4, "name": "Complete swagger documentation", "done": false }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Validation error",
+                  "errors": ["Task name is required and must be a non-empty string."]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tasks/{id}": {
+      "get": {
+        "summary": "Get a single task by ID",
+        "description": "Retrieves details of a specific task.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the task",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task details retrieved successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Task retrieved successfully",
+                  "data": { "id": 1, "name": "Learn Express.js", "done": true }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID format",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Task ID must be a positive integer",
+                  "errors": null
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Task with ID 999 not found",
+                  "errors": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update an existing task",
+        "description": "Updates the name and/or done status of a task by ID.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the task",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Learn Express.js (Updated)"
+                  },
+                  "done": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Task updated successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Task updated successfully",
+                  "data": { "id": 1, "name": "Learn Express.js (Updated)", "done": true }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error or invalid ID",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Validation error",
+                  "errors": ["At least one field ('name' or 'done') must be provided for update."]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Task with ID 999 not found",
+                  "errors": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a task by ID",
+        "description": "Removes a task from the list.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Numeric ID of the task",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task deleted successfully",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Task deleted successfully",
+                  "data": { "id": 1, "name": "Learn Express.js", "done": true }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID format",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Task ID must be a positive integer",
+                  "errors": null
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Task not found",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": false,
+                  "message": "Task with ID 999 not found",
+                  "errors": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
