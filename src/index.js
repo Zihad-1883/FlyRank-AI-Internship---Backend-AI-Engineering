@@ -23,7 +23,8 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.use("/tasks", tasksRoute);
+app.use("/tasks", tasksRoute.router);
+app.use("/stats", tasksRoute.statsRouter);
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

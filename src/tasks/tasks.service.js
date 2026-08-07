@@ -51,7 +51,7 @@ const getAllTasks = async (query) => {
             .split(" ")
             .includes(query.search.toLowerCase()),
       );
-    
+
       return {
         statusCode: 200,
         data: filteredTasks,
@@ -208,10 +208,26 @@ const deleteTask = async (id) => {
   };
 };
 
+const getTaskStats = async () => {
+  const totalTasks = seedTasks.length;
+  const completedTasks = seedTasks.filter((task) => task.done === true).length;
+  const pendingTasks = seedTasks.filter((task) => task.done === false).length;
+
+  return {
+    statusCode: 200,
+    data: {
+      totalTasks,
+      completedTasks,
+      pendingTasks,
+    },
+  };
+};
+
 module.exports = {
   getAllTasks,
   getSingleTask,
   createTask,
   updateTask,
   deleteTask,
+  getTaskStats,
 };

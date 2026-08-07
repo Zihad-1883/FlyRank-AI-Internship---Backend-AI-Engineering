@@ -31,10 +31,16 @@ const deleteTask = async (req, res) => {
   res.json(deletedTask);
 };
 
+const getTaskStats = async (req, res) => {
+  const stats = await service.getTaskStats();
+  res.json(stats);
+};
+
 module.exports = {
   getAllTasks,
   getSingleTask,
   createTask,
   updateTask,
   deleteTask,
+  getTaskStats,
 };
