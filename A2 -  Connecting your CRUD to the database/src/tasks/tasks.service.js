@@ -81,11 +81,59 @@ export const createTask = async (payload) => {
 };
 
 export const updateTask = async (id, payload) => {
+  const { title, done } = payload;
+  const db = await getDb();
 
+  if (title && typeof title !== 'string' || title.trim() === '') {
+    return {
+      statusCode: 400,
+      message: "Invalid title",
+    };
+  }
+
+  if (done !== undefined && typeof done !== 'boolean') {
+    return {
+      statusCode: 400,
+      message: "Invalid done value",
+    };
+  }
+
+  const task = await db.get('SELECT * FROM tasks WHERE id = ?', [id]);
+  if (!task) {
+    return {
+      statusCode: 404,
+      message: "Task not found",
+    };
+  }
+
+  const sql = 'UPDATE tasks SET title = ?, done = ?, updated_at = ? WHERE id = ?';
+  const result = await db.run(sql, [title, done, new Date().toISOString(), id]);
+  return {
+    statusCode: 200,
+    data: {
+      ...task,
+      title,
+      done,
+      updated_at: new Date().toISOString(),
+    },
+  };
 };
 
 export const deleteTask = async (id) => {
-
+  const db = await getDb();
+  const task = await db.get('SELECT * FROM tasks WHERE id = ?', [id]);
+  if (!task) {
+    return {
+      statusCode: 404,
+      message: "Task not found",
+    };
+  }
+  const sql = 'DELETE FROM tasks WHERE id = ?';
+  await db.run(sql, [id]);
+  return {
+    statusCode: 204,
+    message: "Task deleted successfully",
+  };
 };
 
 export const getTaskStats = async () => {
