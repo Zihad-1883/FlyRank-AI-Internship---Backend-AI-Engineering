@@ -84,7 +84,7 @@ export const updateTask = async (id, payload) => {
   const { title, done } = payload;
   const db = await getDb();
 
-  if (title && typeof title !== 'string' || title.trim() === '') {
+  if (title !== undefined && (typeof title !== 'string' || title.trim() === '')) {
     return {
       statusCode: 400,
       message: "Invalid title",
@@ -106,15 +106,18 @@ export const updateTask = async (id, payload) => {
     };
   }
 
-  const sql = 'UPDATE tasks SET title = ?, done = ?, updated_at = ? WHERE id = ?';
-  const result = await db.run(sql, [title, done, new Date().toISOString(), id]);
+  const updatedTitle = title !== undefined ? title.trim() : task.title;
+  const updatedDone = done !== undefined ? (done ? 1 : 0) : task.done;
+
+  const sql = 'UPDATE tasks SET title = ?, done = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
+  await db.run(sql, [updatedTitle, updatedDone, id]);
+
+  const updatedTask = await db.get('SELECT * FROM tasks WHERE id = ?', [id]);
   return {
     statusCode: 200,
     data: {
-      ...task,
-      title,
-      done,
-      updated_at: new Date().toISOString(),
+      ...updatedTask,
+      done: Boolean(updatedTask.done),
     },
   };
 };
