@@ -1,41 +1,34 @@
-import { getDb } from "../db/database.js";
+import { pool } from '../db/database.js';
 
 export const getAllTasks = async (query = {}) => {
-  const db = await getDb();
-  let sql = 'SELECT * FROM tasks WHERE 1=1';
+  let sql = 'SELECT id, title, done, created_at AS "createdAt", updated_at AS "updatedAt" FROM tasks WHERE 1=1';
   const params = [];
 
   if (query.done !== undefined) {
-    const isDone = query.done === 'true' ? 1 : 0;
-    sql += ' AND done = ?';
+    const isDone = query.done === 'true';
     params.push(isDone);
+    sql += ` AND done = $${params.length}`;
   }
 
   if (query.search !== undefined && query.search.trim() !== '') {
-    sql += ' AND LOWER(title) LIKE ?';
     params.push(`%${query.search.trim().toLowerCase()}%`);
+    sql += ` AND LOWER(title) LIKE $${params.length}`;
   }
 
   sql += ' ORDER BY id ASC';
 
-  const rows = await db.all(sql, params);
-
-  const tasks = (rows || []).map((task) => ({
-    ...task,
-    done: Boolean(task.done),
-  }));
+  const result = await pool.query(sql, params);
 
   return {
     statusCode: 200,
-    data: tasks,
+    data: result.rows,
   };
 };
 
 export const getSingleTask = async (id) => {
-  const db = await getDb();
-  const sql = 'SELECT * FROM tasks WHERE id = ?';
-  const task = await db.get(sql, [id]);
-  if (!task) {
+  const sql = 'SELECT id, title, done, created_at AS "createdAt", updated_at AS "updatedAt" FROM tasks WHERE id = $1';
+  const result = await pool.query(sql, [id]);
+  if (result.rows.length === 0) {
     return {
       statusCode: 404,
       message: 'Task not found',
@@ -43,108 +36,104 @@ export const getSingleTask = async (id) => {
   }
   return {
     statusCode: 200,
-    data: {
-      ...task,
-      done: Boolean(task.done),
-    },
+    data: result.rows[0],
   };
 };
 
 export const createTask = async (payload) => {
-  const db = await getDb();
   const { title } = payload;
-  if (!title) {
+  if (!title || typeof title !== 'string' || title.trim() === '') {
     return {
       statusCode: 400,
-      message: "Title is required",
+      message: 'Title is required',
     };
   }
-  const duplicateTask = await db.get('SELECT * FROM tasks WHERE title = ?', [title]);
-  if (duplicateTask) {
+
+  const dupResult = await pool.query('SELECT * FROM tasks WHERE LOWER(title) = LOWER($1)', [title.trim()]);
+  if (dupResult.rows.length > 0) {
     return {
       statusCode: 400,
-      message: "Task already exists",
+      message: 'Task already exists',
     };
   }
-  const sql = 'INSERT INTO tasks (title) VALUES (?)';
-  const result = await db.run(sql, [title]);
+
+  const sql = `
+    INSERT INTO tasks (title) 
+    VALUES ($1) 
+    RETURNING id, title, done, created_at AS "createdAt", updated_at AS "updatedAt"
+  `;
+  const result = await pool.query(sql, [title.trim()]);
   return {
     statusCode: 201,
-    data: {
-      id: result.lastID,
-      title,
-      done: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
+    data: result.rows[0],
   };
 };
 
 export const updateTask = async (id, payload) => {
   const { title, done } = payload;
-  const db = await getDb();
 
   if (title !== undefined && (typeof title !== 'string' || title.trim() === '')) {
     return {
       statusCode: 400,
-      message: "Invalid title",
+      message: 'Invalid title',
     };
   }
 
   if (done !== undefined && typeof done !== 'boolean') {
     return {
       statusCode: 400,
-      message: "Invalid done value",
+      message: 'Invalid done value',
     };
   }
 
-  const task = await db.get('SELECT * FROM tasks WHERE id = ?', [id]);
-  if (!task) {
+  const taskResult = await pool.query('SELECT * FROM tasks WHERE id = $1', [id]);
+  if (taskResult.rows.length === 0) {
     return {
       statusCode: 404,
-      message: "Task not found",
+      message: 'Task not found',
     };
   }
 
-  const updatedTitle = title !== undefined ? title.trim() : task.title;
-  const updatedDone = done !== undefined ? (done ? 1 : 0) : task.done;
+  const currentTask = taskResult.rows[0];
+  const updatedTitle = title !== undefined ? title.trim() : currentTask.title;
+  const updatedDone = done !== undefined ? done : currentTask.done;
 
-  const sql = 'UPDATE tasks SET title = ?, done = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?';
-  await db.run(sql, [updatedTitle, updatedDone, id]);
+  const sql = `
+    UPDATE tasks 
+    SET title = $1, done = $2, updated_at = CURRENT_TIMESTAMP 
+    WHERE id = $3 
+    RETURNING id, title, done, created_at AS "createdAt", updated_at AS "updatedAt"
+  `;
+  const result = await pool.query(sql, [updatedTitle, updatedDone, id]);
 
-  const updatedTask = await db.get('SELECT * FROM tasks WHERE id = ?', [id]);
   return {
     statusCode: 200,
-    data: {
-      ...updatedTask,
-      done: Boolean(updatedTask.done),
-    },
+    data: result.rows[0],
   };
 };
 
 export const deleteTask = async (id) => {
-  const db = await getDb();
-  const task = await db.get('SELECT * FROM tasks WHERE id = ?', [id]);
-  if (!task) {
+  const taskResult = await pool.query('SELECT * FROM tasks WHERE id = $1', [id]);
+  if (taskResult.rows.length === 0) {
     return {
       statusCode: 404,
-      message: "Task not found",
+      message: 'Task not found',
     };
   }
-  const sql = 'DELETE FROM tasks WHERE id = ?';
-  await db.run(sql, [id]);
+
+  await pool.query('DELETE FROM tasks WHERE id = $1', [id]);
   return {
     statusCode: 204,
-    message: "Task deleted successfully",
+    message: 'Task deleted successfully',
   };
 };
 
 export const getTaskStats = async () => {
-  const db = await getDb();
-  const sql = 'SELECT COUNT(*) as count FROM tasks';
-  const result = await db.get(sql);
+  const result = await pool.query('SELECT COUNT(*)::int as count FROM tasks');
   return {
     statusCode: 200,
-    data: result,
+    data: {
+      total: result.rows[0].count,
+    },
   };
 };
