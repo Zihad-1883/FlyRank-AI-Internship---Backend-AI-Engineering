@@ -61,7 +61,7 @@ npm install
 You can open and inspect `tasks.db` using any SQLite viewer (such as [SQLiteOnline](https://sqliteonline.com/), DB Browser for SQLite, or the VS Code *SQLite Viewer* extension).
 
 ### Database Viewer Screenshot
-![Database Viewer Screenshot](https://raw.githubusercontent.com/Zihad-1883/FlyRank-AI-Internship---W2-A1-Build-your-first-CRUD-API/main/A2%20-%20%20Connecting%20your%20CRUD%20to%20the%20database/docs/sqlite_viewer_screenshot.png)
+![Database Viewer Screenshot](./docs/sqlite_viewer.png)
 
 *(Note: The viewer shows loaded table `tasks` with columns `id`, `title`, `done`, `created_at`, `updated_at` and query history).*
 
