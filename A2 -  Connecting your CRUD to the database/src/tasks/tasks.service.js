@@ -32,11 +32,52 @@ export const getAllTasks = async (query = {}) => {
 };
 
 export const getSingleTask = async (id) => {
-
+  const db = await getDb();
+  const sql = 'SELECT * FROM tasks WHERE id = ?';
+  const task = await db.get(sql, [id]);
+  if (!task) {
+    return {
+      statusCode: 404,
+      message: 'Task not found',
+    };
+  }
+  return {
+    statusCode: 200,
+    data: {
+      ...task,
+      done: Boolean(task.done),
+    },
+  }
 };
 
 export const createTask = async (payload) => {
-
+  const db = await getDb();
+  const { title } = payload;
+  if (!title) {
+    return {
+      statusCode: 400,
+      message: "Title is required",
+    };
+  }
+  const duplicateTask = await db.get('SELECT * FROM tasks WHERE title = ?', [title]);
+  if (duplicateTask) {
+    return {
+      statusCode: 400,
+      message: "Task already exists",
+    };
+  }
+  const sql = 'INSERT INTO tasks (title) VALUES (?)';
+  const result = await db.run(sql, [title]);
+  return {
+    statusCode: 201,
+    data: {
+      id: result.lastID,
+      title,
+      done: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  };
 };
 
 export const updateTask = async (id, payload) => {
