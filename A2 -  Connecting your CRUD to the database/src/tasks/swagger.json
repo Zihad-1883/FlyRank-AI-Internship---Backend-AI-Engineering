@@ -1,0 +1,138 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Task Manager CRUD API with SQLite",
+    "version": "1.0.0",
+    "description": "Task management API powered by Express (ESNext) and SQLite database"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/tasks": {
+      "get": {
+        "summary": "Get all tasks",
+        "parameters": [
+          {
+            "name": "done",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "description": "Filter tasks by completion status"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search tasks by title keyword"
+          }
+        ],
+        "responses": {
+          "200": { "description": "List of tasks" },
+          "404": { "description": "No tasks found" }
+        }
+      },
+      "post": {
+        "summary": "Create a new task",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string", "example": "Buy groceries" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Task created successfully" },
+          "400": { "description": "Invalid payload or duplicate task" }
+        }
+      }
+    },
+    "/tasks/{id}": {
+      "get": {
+        "summary": "Get single task by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Task details" },
+          "404": { "description": "Task not found" }
+        }
+      },
+      "put": {
+        "summary": "Update task by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "done"],
+                "properties": {
+                  "title": { "type": "string", "example": "Finish homework" },
+                  "done": { "type": "boolean", "example": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Task updated successfully" },
+          "400": { "description": "Invalid input" },
+          "404": { "description": "Task not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete task by ID",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "204": { "description": "Task deleted successfully" },
+          "404": { "description": "Task not found" }
+        }
+      }
+    },
+    "/stats": {
+      "get": {
+        "summary": "Get task statistics",
+        "responses": {
+          "200": { "description": "Task counts breakdown" }
+        }
+      }
+    }
+  }
+}
