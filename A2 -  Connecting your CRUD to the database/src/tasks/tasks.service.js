@@ -137,6 +137,12 @@ export const deleteTask = async (id) => {
 };
 
 export const getTaskStats = async () => {
-
+  const db = await getDb();
+  const sql = 'SELECT COUNT(*) as count FROM tasks';
+  const result = await db.get(sql);
+  return {
+    statusCode: 200,
+    data: result,
+  };
 };
 
