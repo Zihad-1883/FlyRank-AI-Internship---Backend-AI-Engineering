@@ -1,0 +1,25 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FlyRank Auth API",
+    "description": "Secure API with Supabase Auth — Sign Up, Log In, Log Out, JWT verification, and protected routes",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Enter your Supabase JWT access token"
+      }
+    }
+  },
+  "paths": {}
+}
