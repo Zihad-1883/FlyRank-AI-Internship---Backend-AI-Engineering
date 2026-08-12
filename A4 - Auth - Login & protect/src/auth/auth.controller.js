@@ -26,9 +26,16 @@ const profile = async (req, res) => {
     return res.status(result.statusCode).json(result);
 }
 
+const dashboard = async (req, res) => {
+    const user = req.user;
+    const result = await authService.getDashboardFromSupabase(user);
+    return res.status(result.statusCode).json(result);
+}
+
 export const authController = {
     signup,
     login,
     logout,
-    profile
+    profile,
+    dashboard
 }

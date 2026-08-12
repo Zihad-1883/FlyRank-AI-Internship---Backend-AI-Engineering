@@ -146,6 +146,25 @@
           }
         }
       }
+    },
+    "/protected/dashboard": {
+      "get": {
+        "summary": "Read protected user dashboard stats",
+        "tags": ["Protected"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns protected dashboard statistics"
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid token"
+          }
+        }
+      }
     }
   }
 }

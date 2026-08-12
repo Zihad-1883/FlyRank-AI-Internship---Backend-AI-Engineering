@@ -75,9 +75,24 @@ const getProfileFromSupabase = async (user) => {
     };
 }
 
+const getDashboardFromSupabase = async (user) => {
+    return {
+        statusCode: 200,
+        message: "Welcome to your protected dashboard!",
+        data: {
+            user: {
+                id: user.id,
+                email: user.email
+            },
+            status: "Active Session"
+        }
+    };
+}
+
 export const authService = {
     signupIntoSupabase,
     loginIntoSupabase,
     logoutFromSupabase,
-    getProfileFromSupabase
+    getProfileFromSupabase,
+    getDashboardFromSupabase
 }

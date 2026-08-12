@@ -10,3 +10,4 @@ authRouter.post("/login", authController.login);
 authRouter.post("/logout", tokenVerifier, authController.logout);
 
 protectedRouter.get("/profile", tokenVerifier, authController.profile);
+protectedRouter.get("/dashboard", tokenVerifier, authController.dashboard);
