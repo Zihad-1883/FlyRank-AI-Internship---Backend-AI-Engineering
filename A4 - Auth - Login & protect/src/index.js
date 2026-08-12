@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import { readFile } from 'fs/promises';
-import { authRouter } from './auth/auth.route.js';
+import { authRouter, protectedRouter } from './auth/auth.route.js';
 
 dotenv.config();
 
@@ -23,7 +23,13 @@ app.get('/', (req, res) => {
 });
 
 
-app.use("/auth", authRouter)
+app.use("/auth", authRouter);
+app.get("/public/info", async (req, res) => {
+  res.status(200).json({
+    "message": "Welcome stranger! This info is public."
+  })
+})
+app.use("/protected", protectedRouter)
 
 
 app.listen(PORT, () => {

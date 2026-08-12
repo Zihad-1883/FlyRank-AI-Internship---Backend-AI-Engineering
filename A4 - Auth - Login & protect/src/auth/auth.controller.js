@@ -12,7 +12,14 @@ const login = async (req, res) => {
     return res.status(result.statusCode).json(result);
 }
 
+const profile = async (req, res) => {
+    const header = req.headers.authorization;
+    const result = await authService.getProfileFromSupabase(header);
+    return res.status(result.statusCode).json(result);
+}
+
 export const authController = {
     signup,
-    login
+    login,
+    profile
 }

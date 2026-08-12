@@ -94,6 +94,36 @@
           }
         }
       }
+    },
+    "/public/info": {
+      "get": {
+        "summary": "Read open public data",
+        "tags": ["Public"],
+        "responses": {
+          "200": {
+            "description": "Public info message"
+          }
+        }
+      }
+    },
+    "/protected/profile": {
+      "get": {
+        "summary": "Read private profile data",
+        "tags": ["Protected"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returns user profile details"
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid token"
+          }
+        }
+      }
     }
   }
 }
