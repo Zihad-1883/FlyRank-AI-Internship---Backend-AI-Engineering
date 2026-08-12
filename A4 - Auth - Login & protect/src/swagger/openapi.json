@@ -95,6 +95,28 @@
         }
       }
     },
+    "/auth/logout": {
+      "post": {
+        "summary": "Log out user & invalidate session",
+        "tags": ["Auth"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content - User logged out successfully"
+          },
+          "401": {
+            "description": "Unauthorized - Missing or invalid Bearer token"
+          },
+          "400": {
+            "description": "Bad request or signout failure"
+          }
+        }
+      }
+    },
     "/public/info": {
       "get": {
         "summary": "Read open public data",

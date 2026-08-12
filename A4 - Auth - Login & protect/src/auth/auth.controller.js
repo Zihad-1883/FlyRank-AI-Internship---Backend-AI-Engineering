@@ -12,14 +12,23 @@ const login = async (req, res) => {
     return res.status(result.statusCode).json(result);
 }
 
+const logout = async (req, res) => {
+    const result = await authService.logoutFromSupabase();
+    if (result.statusCode === 204) {
+        return res.status(204).send();
+    }
+    return res.status(result.statusCode).json(result);
+}
+
 const profile = async (req, res) => {
-    const header = req.headers.authorization;
-    const result = await authService.getProfileFromSupabase(header);
+    const user = req.user;
+    const result = await authService.getProfileFromSupabase(user);
     return res.status(result.statusCode).json(result);
 }
 
 export const authController = {
     signup,
     login,
+    logout,
     profile
 }

@@ -50,34 +50,27 @@ const loginIntoSupabase = async (payload) => {
     }
 }
 
-const getProfileFromSupabase = async (token) => {
-    if (!token) {
-        return {
-            statusCode: 401,
-            error: "Access token required"
-        };
-    }
-    const cleanToken = token.startsWith("Bearer ") ? token.split(" ")[1] : token;
-    if (!cleanToken) {
-        return {
-            statusCode: 401,
-            error: "Access token required"
-        };
-    }
-    const { data, error } = await supabase.auth.getUser(cleanToken);
+const logoutFromSupabase = async () => {
+    const { error } = await supabase.auth.signOut();
     if (error) {
         return {
-            statusCode: 401,
-            error: "Invalid or expired token"
-        };
+            statusCode: 400,
+            message: error.message
+        }
     }
+    return {
+        statusCode: 204
+    }
+}
+
+const getProfileFromSupabase = async (user) => {
     return {
         statusCode: 200,
         message: "User profile fetched successfully",
         data: {
-            id: data.user.id,
-            email: data.user.email,
-            created_at: data.user.created_at
+            id: user.id,
+            email: user.email,
+            created_at: user.created_at
         }
     };
 }
@@ -85,5 +78,6 @@ const getProfileFromSupabase = async (token) => {
 export const authService = {
     signupIntoSupabase,
     loginIntoSupabase,
+    logoutFromSupabase,
     getProfileFromSupabase
 }
