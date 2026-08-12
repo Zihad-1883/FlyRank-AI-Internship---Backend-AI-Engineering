@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import swaggerUi from 'swagger-ui-express';
 import { readFile } from 'fs/promises';
+import { authRouter } from './auth/auth.route.js';
 
 dotenv.config();
 
@@ -14,13 +15,18 @@ const openapiSpec = JSON.parse(
   await readFile(new URL('./swagger/openapi.json', import.meta.url))
 );
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec));
 
 app.get('/', (req, res) => {
-  res.json({ message: 'Auth API server is running. Visit /docs for Swagger UI documentation.' });
+  res.json({ message: 'Auth API server is running. Visit /api-docs for Swagger UI documentation.' });
 });
+
+
+app.use("/auth", authRouter)
+
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT} and connected to Supabase`);
-  console.log(`Swagger UI available at http://localhost:${PORT}/docs`);
+  console.log(`Swagger UI available at http://localhost:${PORT}/api-docs`);
 });
