@@ -1,5 +1,4 @@
 node_modules/
-cache/
-output/
+src/cache/
 *.log
 .DS_Store
