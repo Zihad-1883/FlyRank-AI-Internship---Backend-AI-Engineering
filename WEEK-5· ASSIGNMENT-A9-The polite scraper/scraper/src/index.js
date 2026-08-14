@@ -28,11 +28,28 @@ async function fetchWithCache(url, cachePath) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-    const response = await fetch(url, {
-        headers: { "User-Agent": USER_AGENT },
-        signal: controller.signal,
-    });
+    let response;
+    try {
+        response = await fetch(url, {
+            headers: { "User-Agent": USER_AGENT },
+            signal: controller.signal,
+        });
+    } catch (error) {
+        clearTimeout(timeout);
+        if (attempt < 2) {
+            console.log(`RETRY (network/timeout) — ${url}`);
+            await sleep(1000);
+            return fetchWithCache(url, cachePath, attempt + 1);
+        }
+        throw new Error(`Failed after retry: ${err.message} for ${url}`);
+    }
     clearTimeout(timeout);
+
+    if (response.status >= 500 && attempt < 2) {
+        console.log(`RETRY (status ${response.status}) — ${url}`);
+        await sleep(1000);
+        return fetchWithCache(url, cachePath, attempt + 1);
+    }
 
     if (response.status !== 200) {
         throw new Error(`Failed fetch: status ${response.status} for ${url}`);
@@ -166,12 +183,25 @@ async function saveResults(validRecords, errorRecords) {
 }
 
 async function main() {
+    const startTime = new Date();
+
     const bookRefs = await discoverBookUrls();
+    // bookRefs.push({
+    //     url: "https://books.toscrape.com/catalogue/this-book-does-not-exist_9999/index.html",
+    //     sourcePage: "https://books.toscrape.com/catalogue/page-1.html",
+    // });
 
     const rawRecords = [];
+    const failedPages = [];
+
     for (const { url, sourcePage } of bookRefs) {
-        const record = await extractBookDetails(url, sourcePage);
-        rawRecords.push(record);
+        try {
+            const record = await extractBookDetails(url, sourcePage);
+            rawRecords.push(record);
+        } catch (err) {
+            console.log(`FAILED — ${url} — ${err.message}`);
+            failedPages.push({ url, reason: err.message });
+        }
     }
 
     console.log(`detail_pages=${rawRecords.length}`);
@@ -183,6 +213,22 @@ async function main() {
 
     const { valid, errors } = validateRecords(normalizedRecords);
     await saveResults(valid, errors);
+
+    const endTime = new Date();
+    const report = {
+        start_time: startTime.toISOString(),
+        duration_ms: endTime - startTime,
+        valid_records: valid.length,
+        invalid_records: errors.length,
+        failed_pages: failedPages.length,
+        failed_page_details: failedPages,
+    };
+
+    await mkdir("output", { recursive: true });
+    await writeFile("output/run-report.json", JSON.stringify(report, null, 2), "utf-8");
+
+    console.log(`failed_pages=${failedPages.length}`);
+    console.log("Run report written to output/run-report.json");
 }
 
 main();
