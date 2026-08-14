@@ -1,6 +1,19 @@
 import { writeFile, readFile, mkdir } from "fs/promises";
 import { existsSync, utimes } from "fs";
 import * as cheerio from "cheerio"
+import { z } from "zod";
+
+const BookSchema = z.object({
+    title: z.string().min(1),
+    product_url: z.string().url().startsWith("https://"),
+    price_text: z.string().min(1),
+    price_gbp: z.number().positive(),
+    availability_text: z.string().min(1),
+    rating_text: z.string().nullable(),
+    description: z.string().nullable(),
+    source_page: z.string().url(),
+    fetched_at: z.string().datetime(),
+});
 
 const USER_AGENT = "FlyRankInternshipA9/1.0 (+https://github.com/yourname/your-repo)";
 const TIMEOUT_MS = 15000;
@@ -114,17 +127,62 @@ async function extractBookDetails(url, sourcePage) {
     return record;
 }
 
+function parsePrice(priceText) {
+    const cleaned = priceText.replace(/[^\d.]/g, "");
+    return parseFloat(cleaned);
+}
+
+function validateRecords(records) {
+    const valid = [];
+    const errors = [];
+
+    for (const record of records) {
+        const result = BookSchema.safeParse(record);
+        if (result.success) {
+            valid.push(result.data);
+        } else {
+            errors.push({
+                product_url: record.product_url,
+                reason: result.error.issues.map(i => `${i.path.join(".")}: ${i.message}`).join("; "),
+            })
+        }
+    }
+
+    return { valid, errors };
+}
+
+async function saveResults(validRecords, errorRecords) {
+    await mkdir("output", { recursive: true });
+
+    const byUrl = new Map();
+    for (const r of validRecords) byUrl.set(r.product_url, r);
+    const deduped = [...byUrl.values()];
+
+    await writeFile("output/books.json", JSON.stringify(deduped, null, 2), "utf-8");
+    await writeFile("output/errors.json", JSON.stringify(errorRecords, null, 2), "utf-8");
+
+    console.log(`valid_records=${deduped.length}`);
+    console.log(`invalid_records=${errorRecords.length}`);
+}
+
 async function main() {
     const bookRefs = await discoverBookUrls();
 
-    const records = [];
+    const rawRecords = [];
     for (const { url, sourcePage } of bookRefs) {
         const record = await extractBookDetails(url, sourcePage);
-        records.push(record);
+        rawRecords.push(record);
     }
 
-    console.log(`detail_pages=${records.length}`);
-    console.log(JSON.stringify(records[0], null, 2));
+    console.log(`detail_pages=${rawRecords.length}`);
+
+    const normalizedRecords = rawRecords.map(r => ({
+        ...r,
+        price_gbp: parsePrice(r.price_text),
+    }));
+
+    const { valid, errors } = validateRecords(normalizedRecords);
+    await saveResults(valid, errors);
 }
 
 main();
