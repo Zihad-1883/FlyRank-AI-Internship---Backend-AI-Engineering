@@ -1,9 +1,9 @@
 import { writeFile, readFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
+import { existsSync, utimes } from "fs";
 import * as cheerio from "cheerio"
 
 const USER_AGENT = "FlyRankInternshipA9/1.0 (+https://github.com/yourname/your-repo)";
-const TIMEOUT_MS = 10000;
+const TIMEOUT_MS = 15000;
 
 async function fetchWithCache(url, cachePath) {
     if (existsSync(cachePath)) {
@@ -40,18 +40,18 @@ async function discoverBookUrls() {
     let pageUrl = "https://books.toscrape.com/catalogue/page-1.html";
     let pageNum = 1;
     const MAX_PAGES = 3;
-    const allLinks = [];
+    const records = [];
 
     while (pageUrl) {
         const cachePath = `cache/catalogue-page-${pageNum}.html`;
         const wasCached = existsSync(cachePath);
         const html = await fetchWithCache(pageUrl, cachePath);
-
         const $ = cheerio.load(html);
+
         $("article.product_pod h3 a").each((i, el) => {
             const href = $(el).attr("href");
             const absolute = new URL(href, pageUrl).href;
-            allLinks.push(absolute);
+            records.push({ url: absolute, sourcePage: pageUrl });
         });
 
         const nextHref = $("li.next a").attr("href");
@@ -62,19 +62,69 @@ async function discoverBookUrls() {
         } else {
             pageUrl = null;
         }
-    };
+    }
 
-    const uniqueUrls = [...new Set(allLinks)];
+    const seen = new Map();
+    for (const r of records) {
+        if (!seen.has(r.url)) seen.set(r.url, r.sourcePage);
+    }
 
     console.log(`catalogue_pages=${pageNum}`);
-    console.log(`discovered=${allLinks.length}`);
-    console.log(`unique_urls=${uniqueUrls.length}`);
+    console.log(`discovered=${records.length}`);
+    console.log(`unique_urls=${seen.size}`);
 
-    return uniqueUrls;
+    return [...seen.entries()].map(([url, sourcePage]) => ({ url, sourcePage }));
+}
+
+async function extractBookDetails(url, sourcePage) {
+    const parts = url.split("/").filter(Boolean);
+    const slug = parts[parts.length - 2];
+    const cachePath = `cache/book-${slug}.html`;
+    const wasCached = existsSync(cachePath);
+
+    const html = await fetchWithCache(url, cachePath);
+    const $ = cheerio.load(html);
+    const main = $(".product_main");
+
+    const title = main.find("h1").text().trim();
+    const price_text = main.find(".price_color").text().trim();
+    const availability_text = main.find(".instock.availability").text().trim().replace(/\s+/g, " ");
+
+    const ratingClass = main.find(".star-rating").attr("class") || "";
+    const rating_text = ratingClass.replace("star-rating", "").trim() || null;
+
+    const descDiv = $("#product_description");
+    const description = descDiv.length
+        ? descDiv.next("p").text().trim()
+        : null;
+
+    const record = {
+        title,
+        product_url: url,
+        price_text,
+        availability_text,
+        rating_text,
+        description,
+        source_page: sourcePage,
+        fetched_at: new Date().toISOString(),
+    };
+
+    if (!wasCached) await sleep(500);
+
+    return record;
 }
 
 async function main() {
-    await discoverBookUrls();
+    const bookRefs = await discoverBookUrls();
+
+    const records = [];
+    for (const { url, sourcePage } of bookRefs) {
+        const record = await extractBookDetails(url, sourcePage);
+        records.push(record);
+    }
+
+    console.log(`detail_pages=${records.length}`);
+    console.log(JSON.stringify(records[0], null, 2));
 }
 
 main();
