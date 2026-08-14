@@ -17,10 +17,12 @@ const BookSchema = z.object({
 
 const USER_AGENT = "FlyRankInternshipA9/1.0 (+https://github.com/yourname/your-repo)";
 const TIMEOUT_MS = 15000;
+let cacheHitCount = 0;
 
 async function fetchWithCache(url, cachePath) {
     if (existsSync(cachePath)) {
         const html = await readFile(cachePath, "utf-8");
+        cacheHitCount++;
         console.log(`CACHE HIT (${html.length} bytes) — ${cachePath}`);
         return html;
     }
@@ -218,6 +220,7 @@ async function main() {
     const report = {
         start_time: startTime.toISOString(),
         duration_ms: endTime - startTime,
+        cache_hits: cacheHitCount,
         valid_records: valid.length,
         invalid_records: errors.length,
         failed_pages: failedPages.length,

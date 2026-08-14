@@ -73,8 +73,9 @@ browser (like Playwright) would only add startup cost and complexity for zero be
 
 ```json
 {
-  "start_time": "2026-08-14T09:40:27.410Z",
-  "duration_ms": 252,
+  "start_time": "2026-08-14T09:52:48.294Z",
+  "duration_ms": 248,
+  "cache_hits": 63,
   "valid_records": 60,
   "invalid_records": 0,
   "failed_pages": 0,
